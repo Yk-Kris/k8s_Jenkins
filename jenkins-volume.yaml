@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ceph-secret
+data:
+  key: QVFBeUdLTmkvQlExS3hBQXlqVGRBaXNMY2hUMy9YbW9XQ3YyeUE9PQ==
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ceph-jenkins-pv
+spec:
+   capacity:
+     storage: 2Gi
+   accessModes:
+   - ReadWriteOnce
+   rbd:
+         monitors:
+         - '10.10.36.211:6789'
+         - '10.10.36.212:6789'
+         - '10.10.36.213:6789'
+         pool: kube-jenkins
+         image: rba
+         user: admin
+         secretRef:
+             name: ceph-secret
+         fsType: xfs
+         readOnly: false
+   persistentVolumeReclaimPolicy: Recycle
+---
+apiVersion: v1 
+kind: PersistentVolumeClaim
+metadata:
+  name: ceph-jenkins-pvc 
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+   requests:
+    storage: 2Gi
