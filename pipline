@@ -1,0 +1,29 @@
+def harbor_url = "10.10.36.234:10010"
+def harbor_auth = "dockerhub"
+def build_tag = "v1"
+node('test123'){
+    stage('Clone'){
+        echo "Clone code"
+        git "https://github.com/YuKe-Y/nginx-demo.git"
+    }
+    stage('Test'){
+        echo "This is test stage"
+    }
+    stage('Build'){
+        echo "Build Images"
+        sh "docker build -t 10.10.36.234:10010/library/nginx:${build_tag} ."
+    }
+    stage('Push'){
+        echo "Push image to Harbor"
+       withCredentials([usernamePassword(credentialsId: "${harbor_auth}", passwordVariable: 'password', usernameVariable: 'username')]) {
+            sh "docker login -u ${username} -p ${password} ${harbor_url}"
+            //sh "sleep 800s"
+            sh "docker push 10.10.36.234:10010/library/nginx:${build_tag}"
+       }
+    }
+    stage('Apply'){
+        echo "Start apply service"
+        sh "sed -i 's/<BUILD_TAG>/${build_tag}/' deploy-nginx.yaml"
+        sh "kubectl apply -f deploy-nginx.yaml"
+    }
+}
